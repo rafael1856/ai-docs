@@ -1,0 +1,13 @@
+{
+    "db_name": "mydb",
+    "db_user": "myuser",
+    "db_password": "user-passs",
+    "db_host": "localhost",
+    "db_port": "5432",
+    "pg_user": "postgres",
+    "pg_pass": "pg-passsss.",
+    "api_key": "xxx",
+    "path_config": "conf",
+    "path_data": "data",
+    "path_logs": "logs"
+}

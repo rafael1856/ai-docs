@@ -1,0 +1,6 @@
+.env
+*.pyc
+__pycache__
+conversation_history/*.*
+*.log
+*.ipynb
