@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 #
 
 # Extract the environment name from the YAML file
@@ -21,7 +21,7 @@ fi
 rm logs/*.log > /dev/null 2>&1
 
 # start docker with vdms_rag_nb
-src/run-docker.sh
+# src/run-docker.sh
 
 # # Start the main app
 python src/docs-text-images.py

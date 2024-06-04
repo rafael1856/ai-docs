@@ -4,3 +4,5 @@ __pycache__
 conversation_history/*.*
 *.log
 *.ipynb
+miltimodal_files/*.*
+data/*.*

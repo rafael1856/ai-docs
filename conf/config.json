@@ -1,13 +1,13 @@
 {
-    "db_name": "mydb",
-    "db_user": "myuser",
-    "db_password": "user-passs",
+    "db_name": "aidocs",
+    "db_user": "postgres",
+    "db_password": "yyyy",
     "db_host": "localhost",
     "db_port": "5432",
     "pg_user": "postgres",
-    "pg_pass": "pg-passsss.",
-    "api_key": "xxx",
-    "path_config": "conf",
-    "path_data": "data",
-    "path_logs": "logs"
+    "pg_pass": "xxxx",
+    "win_data_folder": "..\\data\\",
+    "win_log_file": "..\\app.log",
+    "lin_data_folder": "data/",
+    "lin_log_file": "logs/app.log"
 }

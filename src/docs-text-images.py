@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # get_ipython().system(' pip install  -U vdms langchain-experimental')
 
 # # lock to 0.10.19 due to a persistent bug in more recent versions
@@ -13,9 +11,20 @@
 # get_ipython().system(' docker run --rm -d -p 55559:55555 --name vdms_rag_nb intellabs/vdms:latest')
 
 # Connect to VDMS Vector Store
+import os
+import os.path
+import base64
+import json
+import time
+
 from langchain_community.vectorstores.vdms import VDMS_Client
 
-vdms_client = VDMS_Client(port=55559)
+
+try:
+    vdms_client = VDMS_Client(port=55559)
+except Exception as e:
+    print(f"Error connecting to VDMS: {e}")
+    exit()
 
 
 # from dotenv import load_dotenv, find_dotenv
@@ -34,21 +43,42 @@ vdms_client = VDMS_Client(port=55559)
 # 
 # We can use `partition_pdf` below from [Unstructured](https://unstructured-io.github.io/unstructured/introduction.html#key-concepts) to extract text and images.
 
+# Read configuration file
+script_dir = os.path.dirname(os.path.realpath(__file__))
+relative_config_path = os.path.join(script_dir, '..', 'conf', 'config.json')
+config_path = os.path.abspath(relative_config_path)
+with open(config_path, 'r') as file:
+    config = json.load(file)
 
+if os.name == 'nt': # 'nt' stands for Windows
+    DATA_FOLDER = config['win_data_folder']
+    LOG_FILE = config['win_log_file']
+elif os.name == 'posix': # 'posix' stands for Linux/Unix
+    DATA_FOLDER = config['lin_data_folder']
+    LOG_FILE = config['lin_log_file']
+else:
+    raise OSError("Unsupported operating system")
 
 from pathlib import Path
-
 import requests
 
-# Folder with pdf and extracted images
-datapath = Path("./multimodal_files").resolve()
-datapath.mkdir(parents=True, exist_ok=True)
+# try:
+#     # Folder with pdf and extracted images
+#     datapath = Path("./multimodal_files").resolve()
+#     datapath.mkdir(parents=True, exist_ok=True)
+# except Exception as e:
+#     print(f"Error creating directory: {e}")
 
-pdf_url = "https://www.loc.gov/lcm/pdf/LCM_2020_1112.pdf"
-pdf_path = str(datapath / pdf_url.split("/")[-1])
-# pdf_path = "/home/rafael/dev/projects/data-samples/make-dome-house-spiritual-retriet.pdf"
-with open(pdf_path, "wb") as f:
-    f.write(requests.get(pdf_url).content)
+# TODO pass the pdf to analize via parameters
+try:
+    pdf_url = "https://www.loc.gov/lcm/pdf/LCM_2020_1112.pdf"
+    pdf_name = pdf_url.split("/")[-1]
+    pdf_path = os.path.join(DATA_FOLDER, pdf_name)
+    # pdf_path = "/home/rafael/dev/projects/data-samples/make-dome-house-spiritual-retriet.pdf"
+    with open(pdf_path, "wb") as f:
+        f.write(requests.get(pdf_url).content)
+except Exception as e:
+    print(f"Error downloading PDF: {e}")
 
 
 # Extract images, tables, and chunk text
@@ -62,10 +92,10 @@ raw_pdf_elements = partition_pdf(
     max_characters=4000,
     new_after_n_chars=3800,
     combine_text_under_n_chars=2000,
-    image_output_dir_path=datapath,
+    image_output_dir_path=DATA_FOLDER,
 )
 
-datapath = str(datapath)
+datapath = str(DATA_FOLDER)
 
 
 
@@ -92,6 +122,7 @@ print(f"Found {len(texts)} texts and {len(tables)} tables")
 
 
 print("Texts:",texts)
+
 
 
 # ## Multi-modal embeddings with our document
@@ -147,6 +178,8 @@ retriever = vectorstore.as_retriever()
 # `vectorstore.add_images` will store / retrieve images as base64 encoded strings
 
 
+
+
 import base64
 from io import BytesIO
 
@@ -200,8 +233,9 @@ def split_image_text_types(docs):
             )  # base64 encoded str
         else:
             text.append(doc)
+            
+    print({"images": images, "texts": text})
     return {"images": images, "texts": text}
-
 
 # Currently, we format the inputs using a `RunnableLambda` while we add image support to `ChatPromptTemplates`.
 # 
@@ -290,6 +324,9 @@ def plt_img_base64(img_base64):
     # Create an HTML img tag with the base64 string as the source
     image_html = f'<img src="data:image/jpeg;base64,{img_base64}" />'
 
+    # Save the image as an HTML file
+    with open("image.html", "w") as file:
+        file.write(image_html)
     # Display the image by rendering the HTML
     display(HTML(image_html))
 
@@ -307,6 +344,11 @@ for doc in docs:
 
 chain = multi_modal_rag_chain(retriever)
 response = chain.invoke(query)
+# Save the response
+with open("response.txt", "w") as file:
+    file.write(response)
+
+print("Response saved successfully.")
 print(response)
 
 
