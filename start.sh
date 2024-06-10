@@ -24,7 +24,7 @@ rm logs/*.log > /dev/null 2>&1
 # src/run-docker.sh
 
 # # Start the main app
-python src/docs-text-images.py
+python src/main.py
 
 
 

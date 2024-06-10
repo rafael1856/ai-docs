@@ -1,27 +1,28 @@
-# Chartographer-Extra
+# Read PDF with images, analisys and decomposition
 
-A fork of [Call Graph](https://github.com/beicause/call-graph)
 
-![chartographer-extra](https://github.com/gusztavj/vscode-chartographer-improved/master/assets/call-graph.png)
-vscode extension to generate call graph using [Cytoscape.js](https://js.cytoscape.org/) based on vscode call hierarchy language feature.
+
+Multi-modal embeddings with our document
+
+will use [OpenClip multimodal embeddings](https://python.langchain.com/docs/integrations/text_embedding/open_clip).
+
+use a larger model for better performance (set in `langchain_experimental.open_clip.py`).
+
+el_name = "ViT-g-14"
+ckpoint = "laion2b_s34b_b88k"
+
+
 
 ## Features
 
-* show functions and methods grouped by file
-* display function calls and interface implementations
-* jump to function location on `Ctrl/Cmd+LClick`
-* click on function to highlight connections
-* supports color themes
-* ignore files configurably (test files, etc)
-* `Alt+LClick` on a function to fetch connections
-* add a function to an existing graph through `Ctrl+Shift+P`
+* Read local or form the web pdf files
+* Extract images and texts
+* Queries about images, answers with images and texts
+
 
 ## Quick start
 
-1. Move your editor cursor over a function name
-2. Run `Chartographer-Extra: Show call graph` command using `Ctrl+Shift+P` or context menu to show calls
-3. Run `Chartographer-Extra: Add function to existing graph` to add function to last opened graph
-4. `Alt+LClick` on a node to fetch calls for that function
+1. 
 
 ## Requirements
 
@@ -30,17 +31,13 @@ Chartographer-Extra relies on the "call hierarchy" feature of an LSP server. So,
 ## Upcoming Features
 
 * select multiple functions
-* change graph layout algorithm on the fly
-* dim test files
-* group by directory configuration
-* override colors configuration
-* export as image
 
 ### For more information
 
-* [GitHub](https://github.com/gusztavj/vscode-chartographer-improved)
-* 
+* [GitHub]
+
 ### How to setup
+
 ### How to run
 
 **Enjoy!**

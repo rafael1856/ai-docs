@@ -1,14 +1,3 @@
-# get_ipython().system(' pip install  -U vdms langchain-experimental')
-
-# # lock to 0.10.19 due to a persistent bug in more recent versions
-# get_ipython().system(' pip install  pdf2image "unstructured[all-docs]==0.10.19" pillow pydantic lxml open_clip_torch')
-
-# ## Start VDMS Server
-# 
-# Let's start a VDMS docker using port 55559 instead of default 55555. 
-# Keep note of the port and hostname as this is needed for the vector store as it uses the VDMS Python client to connect to the server.
-
-# get_ipython().system(' docker run --rm -d -p 55559:55555 --name vdms_rag_nb intellabs/vdms:latest')
 
 # Connect to VDMS Vector Store
 import os
@@ -16,32 +5,37 @@ import os.path
 import base64
 import json
 import time
+from IPython.display import HTML, display
+import subprocess
+import requests
 
+from pathlib import Path
+from io import BytesIO
+from PIL import Image
+
+from langchain_community.vectorstores import VDMS
+from langchain_experimental.open_clip import OpenCLIPEmbeddings
 from langchain_community.vectorstores.vdms import VDMS_Client
+from unstructured.partition.pdf import partition_pdf
+from langchain_community.llms.ollama import Ollama
+from langchain_core.messages import HumanMessage
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 
+
+
+# ## Start VDMS Server
+# 
+# Let's start a VDMS docker using port 55559 instead of default 55555. 
+# Keep note of the port and hostname as this is needed for the vector store as it uses the VDMS Python client to connect to the server.
+
+subprocess.run(["docker", "run", "--rm", "-d", "-p", "55559:55555", "--name", "vdms_rag_nb", "intellabs/vdms:latest"])
 
 try:
     vdms_client = VDMS_Client(port=55559)
 except Exception as e:
     print(f"Error connecting to VDMS: {e}")
     exit()
-
-
-# from dotenv import load_dotenv, find_dotenv
-# load_dotenv(find_dotenv(), override=True);
-
-# ## Data Loading
-# 
-# ### Partition PDF text and images
-#   
-# Let's look at an example pdf containing interesting images.
-# 
-# Famous photographs from library of congress:
-# 
-# * https://www.loc.gov/lcm/pdf/LCM_2020_1112.pdf
-# * We'll use this as an example below
-# 
-# We can use `partition_pdf` below from [Unstructured](https://unstructured-io.github.io/unstructured/introduction.html#key-concepts) to extract text and images.
 
 # Read configuration file
 script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -59,91 +53,62 @@ elif os.name == 'posix': # 'posix' stands for Linux/Unix
 else:
     raise OSError("Unsupported operating system")
 
-from pathlib import Path
-import requests
 
+# # TODO pass the pdf to analize via parameters
 # try:
-#     # Folder with pdf and extracted images
-#     datapath = Path("./multimodal_files").resolve()
-#     datapath.mkdir(parents=True, exist_ok=True)
+#     pdf_url = "https://www.loc.gov/lcm/pdf/LCM_2020_1112.pdf"
+#     pdf_name = pdf_url.split("/")[-1]
+#     pdf_path = os.path.join(DATA_FOLDER, pdf_name)
+#     # pdf_path = "/home/rafael/dev/projects/data-samples/make-dome-house-spiritual-retriet.pdf"
+#     with open(pdf_path, "wb") as f:
+#         f.write(requests.get(pdf_url).content)
 # except Exception as e:
-#     print(f"Error creating directory: {e}")
-
-# TODO pass the pdf to analize via parameters
-try:
-    pdf_url = "https://www.loc.gov/lcm/pdf/LCM_2020_1112.pdf"
-    pdf_name = pdf_url.split("/")[-1]
-    pdf_path = os.path.join(DATA_FOLDER, pdf_name)
-    # pdf_path = "/home/rafael/dev/projects/data-samples/make-dome-house-spiritual-retriet.pdf"
-    with open(pdf_path, "wb") as f:
-        f.write(requests.get(pdf_url).content)
-except Exception as e:
-    print(f"Error downloading PDF: {e}")
+#     print(f"Error downloading PDF: {e}")
 
 
-# Extract images, tables, and chunk text
-from unstructured.partition.pdf import partition_pdf
+# # Extract images, tables, and chunk text
 
-raw_pdf_elements = partition_pdf(
-    filename=pdf_path,
-    extract_images_in_pdf=True,
-    infer_table_structure=True,
-    chunking_strategy="by_title",
-    max_characters=4000,
-    new_after_n_chars=3800,
-    combine_text_under_n_chars=2000,
-    image_output_dir_path=DATA_FOLDER,
-)
+# raw_pdf_elements = partition_pdf(
+#     filename=pdf_path,
+#     extract_images_in_pdf=True,
+#     infer_table_structure=True,
+#     chunking_strategy="by_title",
+#     max_characters=4000,
+#     new_after_n_chars=3800,
+#     combine_text_under_n_chars=2000,
+#     image_output_dir_path=DATA_FOLDER,
+# )
 
 datapath = str(DATA_FOLDER)
 
+# # Categorize elements by type
+# def categorize_elements(raw_pdf_elements):
+#     """
+#     Categorize extracted elements from a PDF into tables and texts.
+#     raw_pdf_elements: List of unstructured.documents.elements
+#     """
+#     tables = []
+#     texts = []
+#     for element in raw_pdf_elements:
+#         if "unstructured.documents.elements.Table" in str(type(element)):
+#             tables.append(str(element))
+#         elif "unstructured.documents.elements.CompositeElement" in str(type(element)):
+#             texts.append(str(element))  
+#     # print(f"Found {len(texts)} texts and {len(tables)} tables")
+#     return texts, tables
+
+# pdf_path = download_doc(doc_name,doc_path=None, doc_url=None,):
 
 
-# Categorize elements by type
-def categorize_elements(raw_pdf_elements):
-    """
-    Categorize extracted elements from a PDF into tables and texts.
-    raw_pdf_elements: List of unstructured.documents.elements
-    """
-    tables = []
-    texts = []
-    for element in raw_pdf_elements:
-        if "unstructured.documents.elements.Table" in str(type(element)):
-            tables.append(str(element))
-        elif "unstructured.documents.elements.CompositeElement" in str(type(element)):
-            texts.append(str(element))  
-    # print(f"Found {len(texts)} texts and {len(tables)} tables")
-    return texts, tables
+# raw_pdf_elements = extract_images_texts_from_pdf(pdf_path)
 
+# texts, tables = categorize_elements(raw_pdf_elements)
+# print(f"Found {len(texts)} texts and {len(tables)} tables")
 
+# print("Texts:",texts)
 
-texts, tables = categorize_elements(raw_pdf_elements)
-print(f"Found {len(texts)} texts and {len(tables)} tables")
-
-
-print("Texts:",texts)
-
-
-
-# ## Multi-modal embeddings with our document
-# 
-# We will use [OpenClip multimodal embeddings](https://python.langchain.com/docs/integrations/text_embedding/open_clip).
-# 
-# We use a larger model for better performance (set in `langchain_experimental.open_clip.py`).
-# 
-# ```
-# model_name = "ViT-g-14"
-# checkpoint = "laion2b_s34b_b88k"
-# ```
-
-
-import os
-
-from langchain_community.vectorstores import VDMS
-from langchain_experimental.open_clip import OpenCLIPEmbeddings
 
 # vectorstore.set_embedding_function(OpenCLIPEmbeddings(model_name="ViT-g-14", checkpoint="laion2b_s34b_b88k"))
-
 
 # Create VDMS
 vectorstore = VDMS(
@@ -172,18 +137,10 @@ if texts:
 # Make retriever
 retriever = vectorstore.as_retriever()
 
+exit()
 
 # ## RAG
-# 
-# `vectorstore.add_images` will store / retrieve images as base64 encoded strings
-
-
-
-
-import base64
-from io import BytesIO
-
-from PIL import Image
+# `vectorstore.add_images` will store / retrieve images as base64 encoded string
 
 
 def resize_base64_image(base64_string, size=(128, 128)):
@@ -240,18 +197,15 @@ def split_image_text_types(docs):
 # Currently, we format the inputs using a `RunnableLambda` while we add image support to `ChatPromptTemplates`.
 # 
 # Our runnable follows the classic RAG flow - 
-# 
 # * We first compute the context (both "texts" and "images" in this case) and the question (just a RunnablePassthrough here) 
 # * Then we pass this into our prompt template, which is a custom function that formats the message for the llava model. 
 # * And finally we parse the output as a string.
 # 
-# Here we are using Ollama to serve the Llava model. Please see [Ollama](https://python.langchain.com/docs/integrations/llms/ollama) for setup instructions.
+# Here we are using Ollama to serve the Llava model.
+# Please see [Ollama](https://python.langchain.com/docs/integrations/llms/ollama) for setup instructions.
 
 
-from langchain_community.llms.ollama import Ollama
-from langchain_core.messages import HumanMessage
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnableLambda, RunnablePassthrough
+
 
 
 def prompt_func(data_dict):
@@ -317,7 +271,7 @@ def multi_modal_rag_chain(retriever):
 
 
 
-from IPython.display import HTML, display
+
 
 
 def plt_img_base64(img_base64):

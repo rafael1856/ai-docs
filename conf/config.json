@@ -1,13 +1,16 @@
 {
     "db_name": "aidocs",
     "db_user": "postgres",
-    "db_password": "yyyy",
+    "db_password": "123Admin",
     "db_host": "localhost",
     "db_port": "5432",
     "pg_user": "postgres",
-    "pg_pass": "xxxx",
+    "pg_pass": "123Admin",
     "win_data_folder": "..\\data\\",
     "win_log_file": "..\\app.log",
-    "lin_data_folder": "data/",
-    "lin_log_file": "logs/app.log"
+    "lin_data_folder": "/home/rafael/dev/projects/email-candidate/data/",
+    "lin_log_file": "/home/rafael/dev/projects/email-candidate/logs/app.log",
+    "schema": "ai-docs",
+    "log_level": "INFO"
 }
+
