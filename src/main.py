@@ -21,9 +21,13 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 
 from docs import extract_images_texts_from_pdf, categorize_elements
-from vector_store import vectorize
+from images import vectorize, is_base64, plt_img_base64
+from assistent import multi_modal_rag_chain
 
-from config import DATA_FOLDER, LOG_FILE
+
+# from vector_store import vectorize
+
+from read_config import DATA_FOLDER, LOG_FILE
 
 import logging
 from logger_config import setup_logger
@@ -39,12 +43,28 @@ def process_doc(doc_name: str):
     logger.info(f"Found {len(texts)} texts and {len(tables)} tables")
     logger.debug("\n\n Texts:", texts)
 
-    
     retr = vectorize(DATA_FOLDER, texts)
+    
+    # dict_images_texts = split_image_text_types(raw_pdf_elements)
 
+    chain = multi_modal_rag_chain(retr)
 
+    # TODO loop for questions and answers
+    
+    # query = "Woman with children"
+    query = "viking cat"
 
+    docs = retr.invoke(query, k=10)
 
+    for doc in docs:
+        if is_base64(doc.page_content):
+            plt_img_base64(doc.page_content)
+        else:
+            print(doc.page_content)
+
+    chain = multi_modal_rag_chain(retr)
+    response = chain.invoke(query)
+    print(response)
 
 
 def main():
@@ -58,10 +78,14 @@ def main():
     if args.doc:
         doc_path = args.doc
         print(f"Processing local document: {doc_path}")
-        # Copy original file to destination directory (DATA_FOLDER)
+    
         dest_path = os.path.join(DATA_FOLDER, os.path.basename(doc_path))
-        shutil.copy2(doc_path, dest_path)
-        logger.info(f"Copied document to: {dest_path}")
+        if os.path.exists(dest_path):
+            logger.info(f"File already exists: {dest_path}")
+        else:
+            shutil.copy2(doc_path, dest_path)
+            logger.info(f"Copied document to: {dest_path}")
+
         doc_name = os.path.basename(doc_path)
     elif args.url:
         print(f"Downloading document from URL: {args.url}")
@@ -76,6 +100,10 @@ def main():
         return
 
     process_doc(doc_path)
+
+
+    
+
 
 if __name__ == "__main__":
     main()

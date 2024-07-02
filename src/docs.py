@@ -2,7 +2,7 @@ import os
 import requests
 
 from unstructured.partition.pdf import partition_pdf
-from config import DATA_FOLDER, LOG_FILE
+from read_config import DATA_FOLDER, LOG_FILE
 import logging
 from logger_config import setup_logger
 logger = setup_logger('ai-docs')

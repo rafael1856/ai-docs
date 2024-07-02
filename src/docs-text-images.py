@@ -22,6 +22,7 @@ from langchain_core.messages import HumanMessage
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 
+from read_config import DATA_FOLDER, LOG_FILE
 
 
 # ## Start VDMS Server
@@ -29,30 +30,13 @@ from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 # Let's start a VDMS docker using port 55559 instead of default 55555. 
 # Keep note of the port and hostname as this is needed for the vector store as it uses the VDMS Python client to connect to the server.
 
-subprocess.run(["docker", "run", "--rm", "-d", "-p", "55559:55555", "--name", "vdms_rag_nb", "intellabs/vdms:latest"])
+# subprocess.run(["docker", "run", "--rm", "-d", "-p", "55559:55555", "--name", "vdms_rag_nb", "intellabs/vdms:latest"])
 
 try:
     vdms_client = VDMS_Client(port=55559)
 except Exception as e:
     print(f"Error connecting to VDMS: {e}")
     exit()
-
-# Read configuration file
-script_dir = os.path.dirname(os.path.realpath(__file__))
-relative_config_path = os.path.join(script_dir, '..', 'conf', 'config.json')
-config_path = os.path.abspath(relative_config_path)
-with open(config_path, 'r') as file:
-    config = json.load(file)
-
-if os.name == 'nt': # 'nt' stands for Windows
-    DATA_FOLDER = config['win_data_folder']
-    LOG_FILE = config['win_log_file']
-elif os.name == 'posix': # 'posix' stands for Linux/Unix
-    DATA_FOLDER = config['lin_data_folder']
-    LOG_FILE = config['lin_log_file']
-else:
-    raise OSError("Unsupported operating system")
-
 
 # # TODO pass the pdf to analize via parameters
 # try:
@@ -143,128 +127,131 @@ exit()
 # `vectorstore.add_images` will store / retrieve images as base64 encoded string
 
 
-def resize_base64_image(base64_string, size=(128, 128)):
-    """
-    Resize an image encoded as a Base64 string.
+# def resize_base64_image(base64_string, size=(128, 128)):
+#     """
+#     Resize an image encoded as a Base64 string.
 
-    Args:
-    base64_string (str): Base64 string of the original image.
-    size (tuple): Desired size of the image as (width, height).
+#     Args:
+#     base64_string (str): Base64 string of the original image.
+#     size (tuple): Desired size of the image as (width, height).
 
-    Returns:
-    str: Base64 string of the resized image.
-    """
-    # Decode the Base64 string
-    img_data = base64.b64decode(base64_string)
-    img = Image.open(BytesIO(img_data))
+#     Returns:
+#     str: Base64 string of the resized image.
+#     """
+#     # Decode the Base64 string
+#     img_data = base64.b64decode(base64_string)
+#     img = Image.open(BytesIO(img_data))
 
-    # Resize the image
-    resized_img = img.resize(size, Image.LANCZOS)
+#     # Resize the image
+#     resized_img = img.resize(size, Image.LANCZOS)
 
-    # Save the resized image to a bytes buffer
-    buffered = BytesIO()
-    resized_img.save(buffered, format=img.format)
+#     # Save the resized image to a bytes buffer
+#     buffered = BytesIO()
+#     resized_img.save(buffered, format=img.format)
 
-    # Encode the resized image to Base64
-    return base64.b64encode(buffered.getvalue()).decode("utf-8")
-
-
-def is_base64(s):
-    """Check if a string is Base64 encoded"""
-    try:
-        return base64.b64encode(base64.b64decode(s)) == s.encode()
-    except Exception:
-        return False
+#     # Encode the resized image to Base64
+#     return base64.b64encode(buffered.getvalue()).decode("utf-8")
 
 
-def split_image_text_types(docs):
-    """Split numpy array images and texts"""
-    images = []
-    text = []
-    for doc in docs:
-        doc = doc.page_content  # Extract Document contents
-        if is_base64(doc):
-            # Resize image to avoid OAI server error
-            images.append(
-                resize_base64_image(doc, size=(250, 250))
-            )  # base64 encoded str
-        else:
-            text.append(doc)
+# def is_base64(s):
+#     """Check if a string is Base64 encoded"""
+#     try:
+#         return base64.b64encode(base64.b64decode(s)) == s.encode()
+#     except Exception:
+#         return False
+
+
+# def split_image_text_types(docs):
+#     """Split numpy array images and texts"""
+#     images = []
+#     text = []
+#     for doc in docs:
+#         doc = doc.page_content  # Extract Document contents
+#         if is_base64(doc):
+#             # Resize image to avoid OAI server error
+#             images.append(
+#                 resize_base64_image(doc, size=(250, 250))
+#             )  # base64 encoded str
+#         else:
+#             text.append(doc)
             
-    print({"images": images, "texts": text})
-    return {"images": images, "texts": text}
-
-# Currently, we format the inputs using a `RunnableLambda` while we add image support to `ChatPromptTemplates`.
-# 
-# Our runnable follows the classic RAG flow - 
-# * We first compute the context (both "texts" and "images" in this case) and the question (just a RunnablePassthrough here) 
-# * Then we pass this into our prompt template, which is a custom function that formats the message for the llava model. 
-# * And finally we parse the output as a string.
-# 
-# Here we are using Ollama to serve the Llava model.
-# Please see [Ollama](https://python.langchain.com/docs/integrations/llms/ollama) for setup instructions.
+#     print({"images": images, "texts": text})
+#     return {"images": images, "texts": text}
 
 
 
 
-
-def prompt_func(data_dict):
-    # Joining the context texts into a single string
-    formatted_texts = "\n".join(data_dict["context"]["texts"])
-    messages = []
-
-    # Adding image(s) to the messages if present
-    if data_dict["context"]["images"]:
-        image_message = {
-            "type": "image_url",
-            "image_url": {
-                "url": f"data:image/jpeg;base64,{data_dict['context']['images'][0]}"
-            },
-        }
-        messages.append(image_message)
-
-    # Adding the text message for analysis
-    text_message = {
-        "type": "text",
-        "text": (
-            "As an expert art critic and historian, your task is to analyze and interpret images, "
-            "considering their historical and cultural significance. Alongside the images, you will be "
-            "provided with related text to offer context. Both will be retrieved from a vectorstore based "
-            "on user-input keywords. Please convert answers to english and use your extensive knowledge "
-            "and analytical skills to provide a comprehensive summary that includes:\n"
-            "- A detailed description of the visual elements in the image.\n"
-            "- The historical and cultural context of the image.\n"
-            "- An interpretation of the image's symbolism and meaning.\n"
-            "- Connections between the image and the related text.\n\n"
-            f"User-provided keywords: {data_dict['question']}\n\n"
-            "Text and / or tables:\n"
-            f"{formatted_texts}"
-        ),
-    }
-    messages.append(text_message)
-    return [HumanMessage(content=messages)]
+# # Currently, we format the inputs using a `RunnableLambda` while we add image support to `ChatPromptTemplates`.
+# # 
+# # Our runnable follows the classic RAG flow - 
+# # * We first compute the context (both "texts" and "images" in this case) and the question (just a RunnablePassthrough here) 
+# # * Then we pass this into our prompt template, which is a custom function that formats the message for the llava model. 
+# # * And finally we parse the output as a string.
+# # 
+# # Here we are using Ollama to serve the Llava model.
+# # Please see [Ollama](https://python.langchain.com/docs/integrations/llms/ollama) for setup instructions.
 
 
-def multi_modal_rag_chain(retriever):
-    """Multi-modal RAG chain"""
 
-    # Multi-modal LLM
-    llm_model = Ollama(
-        verbose=True, temperature=0.5, model="llava", base_url="http://localhost:11434"
-    )
 
-    # RAG pipeline
-    chain = (
-        {
-            "context": retriever | RunnableLambda(split_image_text_types),
-            "question": RunnablePassthrough(),
-        }
-        | RunnableLambda(prompt_func)
-        | llm_model
-        | StrOutputParser()
-    )
 
-    return chain
+# def prompt_func(data_dict):
+#     # Joining the context texts into a single string
+#     formatted_texts = "\n".join(data_dict["context"]["texts"])
+#     messages = []
+
+#     # Adding image(s) to the messages if present
+#     if data_dict["context"]["images"]:
+#         image_message = {
+#             "type": "image_url",
+#             "image_url": {
+#                 "url": f"data:image/jpeg;base64,{data_dict['context']['images'][0]}"
+#             },
+#         }
+#         messages.append(image_message)
+
+#     # Adding the text message for analysis
+#     text_message = {
+#         "type": "text",
+#         "text": (
+#             "As an expert art critic and historian, your task is to analyze and interpret images, "
+#             "considering their historical and cultural significance. Alongside the images, you will be "
+#             "provided with related text to offer context. Both will be retrieved from a vectorstore based "
+#             "on user-input keywords. Please convert answers to english and use your extensive knowledge "
+#             "and analytical skills to provide a comprehensive summary that includes:\n"
+#             "- A detailed description of the visual elements in the image.\n"
+#             "- The historical and cultural context of the image.\n"
+#             "- An interpretation of the image's symbolism and meaning.\n"
+#             "- Connections between the image and the related text.\n\n"
+#             f"User-provided keywords: {data_dict['question']}\n\n"
+#             "Text and / or tables:\n"
+#             f"{formatted_texts}"
+#         ),
+#     }
+#     messages.append(text_message)
+#     return [HumanMessage(content=messages)]
+
+
+# def multi_modal_rag_chain(retriever):
+#     """Multi-modal RAG chain"""
+
+#     # Multi-modal LLM
+#     llm_model = Ollama(
+#         verbose=True, temperature=0.5, model="llava", base_url="http://localhost:11434"
+#     )
+
+#     # RAG pipeline
+#     chain = (
+#         {
+#             "context": retriever | RunnableLambda(split_image_text_types),
+#             "question": RunnablePassthrough(),
+#         }
+#         | RunnableLambda(prompt_func)
+#         | llm_model
+#         | StrOutputParser()
+#     )
+
+#     return chain
 
 
 # ## Test retrieval and run RAG

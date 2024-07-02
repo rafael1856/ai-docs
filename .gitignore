@@ -6,3 +6,4 @@ conversation_history/*.*
 *.ipynb
 miltimodal_files/*.*
 data/*.*
+conf/system_config.json

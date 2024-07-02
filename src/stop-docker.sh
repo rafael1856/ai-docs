@@ -1,2 +1,2 @@
 #!/bin/bash
-docker kill vdms_rag_nb
+sudo docker kill vdms_rag_nb
