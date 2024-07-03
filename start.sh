@@ -22,7 +22,7 @@ if [ "$env_name" != "$current_env" ]; then
     printf "\nThe current conda environment is not the expected environment."
     printf "\n\n%40s" "Activate the enviroment running: ${RED}conda activate $env_name ${NORMAL}"
     printf "\n\n%40s\n" "If you don't have the environment, create it by running: ${RED}source bin/setup.sh ${NORMAL}"
-  exit 1
+    exit 1
 fi
 
 # clean old logs
@@ -39,20 +39,24 @@ else
     exit 1
 fi
 
-# Stop the docker container
-src/stop-docker.sh
 
-sleep 5
+#  be carefull with this parameters for the VDMS vector database parallelizaing
+#  they can allow to use all the CPU availables
+export KMP_DEVICE_THREAD_LIMIT=2
+export KMP_TEAMS_THREAD_LIMIT=2
+export OMP_THREAD_LIMIT=2
 
-# Start the docker containerfor the vector database
-printf "\n *** starting docker for vector database  ***"
+# Check if the Docker container named vdms_rag_nb is running
+if docker ps --filter "name=vdms_rag_nb" --filter "status=running" | grep -q vdms_rag_nb; then
+    echo "The vdms_rag_nb container is running....stopping it"
+    src/stop-docker.sh
+    sleep 5
+else 
+    # Start the docker containerfor the vector database
+    printf "\n *** starting docker for vector database  *** \n"
+    src/run-docker.sh
+fi
 
-export KMP_DEVICE_THREAD_LIMIT=4
-src/run-docker.sh
 
+# must pass a parameter to python script
 python src/main.py $arg_for_python
-
-
-# OMP: Warning #96: Cannot form a team with 12 threads, using 1 instead.
-# OMP: Hint Consider unsetting KMP_DEVICE_THREAD_LIMIT (KMP_ALL_THREADS), KMP_TEAMS_THREAD_LIMIT, and OMP_THREAD_LIMIT (if any are set).
-

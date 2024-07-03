@@ -41,31 +41,41 @@ def process_doc(doc_name: str):
     raw_pdf_elements = extract_images_texts_from_pdf(doc_name)
     texts, tables = categorize_elements(raw_pdf_elements)
     logger.info(f"Found {len(texts)} texts and {len(tables)} tables")
-    logger.debug("\n\n Texts:", texts)
-
+    # logger.debug("\n\n Texts:", texts)
     retr = vectorize(DATA_FOLDER, texts)
     
-    # dict_images_texts = split_image_text_types(raw_pdf_elements)
-
-    chain = multi_modal_rag_chain(retr)
-
     # TODO loop for questions and answers
     
     # query = "Woman with children"
     query = "viking cat"
 
+    # generate_response()
     docs = retr.invoke(query, k=10)
+    logger.debug("query")
 
     for doc in docs:
         if is_base64(doc.page_content):
-            plt_img_base64(doc.page_content)
+            logger.debug("making html image")
+            imghtml = plt_img_base64(doc.page_content)
         else:
             print(doc.page_content)
 
     chain = multi_modal_rag_chain(retr)
+    logger.debug("multi_modal_rag_chain(retr)", chain)
+
     response = chain.invoke(query)
+
+    # Save the response
+    logger.debug(f"Writing response: {response}")
+    file_text = DATA_FOLDER  + "/response.txt"
+    with open(file_text, "w") as file:
+        file.write(response)
+
+    print("Response saved successfully.")
     print(response)
 
+    # Display the image by rendering the HTML
+    display(HTML(imghtml))
 
 def main():
     parser = argparse.ArgumentParser(description='Process a document.')
@@ -101,8 +111,6 @@ def main():
 
     process_doc(doc_path)
 
-
-    
 
 
 if __name__ == "__main__":

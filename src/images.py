@@ -5,7 +5,7 @@ import os.path
 import base64
 import json
 import time
-from IPython.display import HTML, display
+from IPython.display import display
 import subprocess
 import requests
 
@@ -109,9 +109,9 @@ def split_image_text_types(docs):
     images = []
     text = []
     for doc in docs:
-        print("\nDOC=",doc)
+        # print("\nDOC=",doc)
 
-        print("\ntype of DOC=", type(doc).__name__)
+        # print("\ntype of DOC=", type(doc).__name__)
 
         doc = doc.page_content  # Extract Document contents
         if is_base64(doc):
@@ -122,7 +122,7 @@ def split_image_text_types(docs):
         else:
             text.append(doc)
             
-    print({"images": images, "texts": text})
+    # print({"images": images, "texts": text})
     return {"images": images, "texts": text}
 
 
@@ -132,5 +132,10 @@ def plt_img_base64(img_base64):
     # Create an HTML img tag with the base64 string as the source
     image_html = f'<img src="data:image/jpeg;base64,{img_base64}" />'
 
-    # Display the image by rendering the HTML
-    display(HTML(image_html))
+    # Save the image as an HTML file
+    file_image = DATA_FOLDER + "/image.html"
+    with open(file_image, "w") as file:
+        file.write(image_html)
+
+    return image_html
+
