@@ -3,26 +3,30 @@
 import os
 import os.path
 import base64
-import json
-import time
+# import json
+# import time
 from IPython.display import display
-import subprocess
-import requests
+# import subprocess
+# import requests
 
-from pathlib import Path
+# from pathlib import Path
 from io import BytesIO
 from PIL import Image
 
 from langchain_community.vectorstores import VDMS
 from langchain_experimental.open_clip import OpenCLIPEmbeddings
 from langchain_community.vectorstores.vdms import VDMS_Client
-from unstructured.partition.pdf import partition_pdf
-from langchain_community.llms.ollama import Ollama
-from langchain_core.messages import HumanMessage
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnableLambda, RunnablePassthrough
+# from unstructured.partition.pdf import partition_pdf
+# from langchain_community.llms.ollama import Ollama
+# from langchain_core.messages import HumanMessage
+# from langchain_core.output_parsers import StrOutputParser
+# from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 
-from read_config import DATA_FOLDER, LOG_FILE
+from read_config import DATA_FOLDER
+from logger_config import setup_logger
+
+print("Starting AI-Docs...")
+logger = setup_logger('ai-docs-images')
 
 
 def vectorize(datapath, texts):
@@ -122,7 +126,7 @@ def split_image_text_types(docs):
         else:
             text.append(doc)
             
-    # print({"images": images, "texts": text})
+    logger.debug ({"images": images, "texts": text})
     return {"images": images, "texts": text}
 
 

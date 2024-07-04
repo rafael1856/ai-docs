@@ -1,7 +1,6 @@
 #!/bin/bash
 # This script sets up the Mamba environment for the project.
 # Define what python version to use
-# run source bin/setup.sh
 
 enviro=$(basename "$PWD")
 
@@ -14,6 +13,6 @@ echo " ------------------------------------   "
 echo " mamba activate "$enviro
 echo " -------------------------------------  "
 
-# setup install pip in specific environment, enviroment must be activated before this setp !
+# setup install pip in specific environment, enviroment must be activated before this step !
 echo " pip install -r conf/p-requirements.txt "
 

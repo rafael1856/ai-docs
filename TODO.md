@@ -1,11 +1,28 @@
-- quede en assitent.py
-- hay que conectar con el main.py
-- run from ./start.sh por el docker
-- checkear el error que da el docker
+# Project
 
-- revisar los archivos de configuracion y actualzarlos ahora que corre
+Project Description
 
+<em>[TODO.md spec & Kanban Board](https://bit.ly/3fCwKfM)</em>
 
-- add one folder per pdf
-- add image counter
-- store the vector database and retrive after shutdown
+### Todo
+
+- [ ] Explanations  
+- [ ] Diagram program  
+- [ ] Recover data from VectorDB  
+- [ ] Add interface to show the PDF and make questions about that PDF  
+- [ ] Investigate VSDM vectorDB  
+- [ ] Save results in a DB  
+- [ ] Add one folder per PDF  
+- [ ] Doc strings  
+
+### In Progress
+
+- [ ] Adjust README  
+- [ ] Add loop for queries  
+
+### Done ✓
+
+- [x] Convert from J-Notebook  
+- [x] Normalize, modularize  
+- [x] Add logger, documentation  
+

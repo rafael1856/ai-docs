@@ -43,7 +43,7 @@ fi
 #  be carefull with this parameters for the VDMS vector database parallelizaing
 #  they can allow to use all the CPU availables
 export KMP_DEVICE_THREAD_LIMIT=2
-export KMP_TEAMS_THREAD_LIMIT=2
+export KMP_TEAMS_THREAD_LIMIT=4
 export OMP_THREAD_LIMIT=2
 
 # Check if the Docker container named vdms_rag_nb is running
@@ -57,6 +57,12 @@ else
     src/run-docker.sh
 fi
 
-
 # must pass a parameter to python script
 python src/main.py $arg_for_python
+
+# Check if the Docker container named vdms_rag_nb is running (stop it !)
+if docker ps --filter "name=vdms_rag_nb" --filter "status=running" | grep -q vdms_rag_nb; then
+    echo "The vdms_rag_nb container is running....stopping it"
+    src/stop-docker.sh
+    sleep 5
+fi

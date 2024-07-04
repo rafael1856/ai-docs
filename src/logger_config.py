@@ -5,6 +5,9 @@
 
 
 #### Log messages at different levels ####
+# The value is set up at conf/system_+config.json file
+# Posibbles values DEBUG, INFO, WARNING, ERROR, CRITICAL
+
 # logger.debug('This is a debug message.')
 # logger.info('This is an informational message.')
 # logger.warning('This is a warning message.')
@@ -30,17 +33,16 @@ import os
 import json
 import logging
 
-
 # def setup_logger(name, log_level=logging.DEBUG, log_file=None):
 def setup_logger(name):
 
     """
     Set up a logger with the specified name and log level.
     
-    :param name: Name of the logger.
-    :param log_level: Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL).
-    :param log_file: Optional path to a log file.
-    :return: Logger instance.
+    param name: Name of the logger.
+    from config: log_level: Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL).
+    from config: log_file: Optional path to a log file.
+    return: Logger instance.
     """
 
     # get parameters from config file
@@ -61,11 +63,14 @@ def setup_logger(name):
         raise OSError("Unsupported operating system")
 
     logger = logging.getLogger(name)
-    logger.setLevel(LOG_LEVEL)
+   
+    logger.setLevel(logging.LOG_LEVEL)
+    # logger.setLevel(logging.INFO)
 
     # Create console handler and set level to debug
     ch = logging.StreamHandler()
-    ch.setLevel(LOG_LEVEL)
+    ch.setLevel(logging.LOG_LEVEL)
+    # ch.setLevel(logging.INFO)
 
     # Create formatter and add it to the handlers
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -77,10 +82,9 @@ def setup_logger(name):
     # If a log file is specified, also add a file handler
     if LOG_FILE:
         fh = logging.FileHandler(LOG_FILE)
-        fh.setLevel(LOG_LEVEL)
+        fh.setLevel(logging.LOG_LEVEL)
+        # fh.setLevel(logging.INFO)
         fh.setFormatter(formatter)
         logger.addHandler(fh)
 
     return logger
-
-

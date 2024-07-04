@@ -1,61 +1,46 @@
 import os.path
 import base64
-import json
+# import json
 import time
 from IPython.display import HTML, display
-import subprocess
+# import subprocess
 import requests
 import shutil
 import argparse
 
-from pathlib import Path
-from io import BytesIO
-from PIL import Image
-from langchain_community.vectorstores import VDMS
-from langchain_experimental.open_clip import OpenCLIPEmbeddings
-from langchain_community.vectorstores.vdms import VDMS_Client
-from unstructured.partition.pdf import partition_pdf
-from langchain_community.llms.ollama import Ollama
-from langchain_core.messages import HumanMessage
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnableLambda, RunnablePassthrough
+# from pathlib import Path
+# from io import BytesIO
+# from PIL import Image
+# from langchain_community.vectorstores import VDMS
+# from langchain_experimental.open_clip import OpenCLIPEmbeddings
+# from langchain_community.vectorstores.vdms import VDMS_Client
+# from unstructured.partition.pdf import partition_pdf
+# from langchain_community.llms.ollama import Ollama
+# from langchain_core.messages import HumanMessage
+# from langchain_core.output_parsers import StrOutputParser
+# from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 
 from docs import extract_images_texts_from_pdf, categorize_elements
 from images import vectorize, is_base64, plt_img_base64
 from assistent import multi_modal_rag_chain
 
-
-# from vector_store import vectorize
-
-from read_config import DATA_FOLDER, LOG_FILE
+from read_config import DATA_FOLDER
 
 import logging
 from logger_config import setup_logger
 
-print("Starting AI-Docs...")
-logger = setup_logger('ai-docs')
 
+logger = setup_logger('ai-docs-main')
+logger.info("Starting main")
 
-def process_doc(doc_name: str):
-        
-    raw_pdf_elements = extract_images_texts_from_pdf(doc_name)
-    texts, tables = categorize_elements(raw_pdf_elements)
-    logger.info(f"Found {len(texts)} texts and {len(tables)} tables")
-    # logger.debug("\n\n Texts:", texts)
-    retr = vectorize(DATA_FOLDER, texts)
-    
-    # TODO loop for questions and answers
-    
-    # query = "Woman with children"
-    query = "viking cat"
-
-    # generate_response()
+def generate_response(retr, query):
+        # generate_response()
     docs = retr.invoke(query, k=10)
-    logger.debug("query")
+    logger.debug(f"query: {query}")
 
     for doc in docs:
         if is_base64(doc.page_content):
-            logger.debug("making html image")
+            logger.debug("Building html image")
             imghtml = plt_img_base64(doc.page_content)
         else:
             print(doc.page_content)
@@ -65,17 +50,37 @@ def process_doc(doc_name: str):
 
     response = chain.invoke(query)
 
+    return response, imghtml
+
+
+
+def process_doc(doc_name: str):
+        
+    raw_pdf_elements = extract_images_texts_from_pdf(doc_name)
+    
+    texts, tables = categorize_elements(raw_pdf_elements)
+    logger.info(f"Found {len(texts)} texts and {len(tables)} tables")
+
+    retr = vectorize(DATA_FOLDER, texts)
+    
+    # TODO loop for questions and answers
+    # query = "Woman with children"
+    query = "viking cat"
+
+    respo, imgh = generate_response(retr, query)
+
     # Save the response
-    logger.debug(f"Writing response: {response}")
+    logger.debug(f"Writing response: {respo}")
     file_text = DATA_FOLDER  + "/response.txt"
     with open(file_text, "w") as file:
-        file.write(response)
+        file.write(respo)
 
-    print("Response saved successfully.")
-    print(response)
+    logger.info("Response saved successfully.")
+    logger.debug(f"Response saved successfully: {respo}")
 
     # Display the image by rendering the HTML
-    display(HTML(imghtml))
+    # the html was generated at images.py
+    display(HTML(imgh))
 
 def main():
     parser = argparse.ArgumentParser(description='Process a document.')
@@ -98,20 +103,19 @@ def main():
 
         doc_name = os.path.basename(doc_path)
     elif args.url:
-        print(f"Downloading document from URL: {args.url}")
-        # Implement downloading logic here if necessary
+        logger.info(f"Downloading document from URL: {args.url}")
         doc_name = args.url.split("/")[-1]
         logger.debug("doc_name:",doc_name)
         doc_path = os.path.join(DATA_FOLDER, doc_name)       
         with open(doc_path, "wb") as f:
             f.write(requests.get(args.url).content)
     else:
-        print("Please provide either --doc or --url.")
+        print("Please provide either --doc <path_to_the_doc> or --url <url>")
         return
 
     process_doc(doc_path)
 
-
+    print(f"\n Results are saved at folder:, {DATA_FOLDER}\n")
 
 if __name__ == "__main__":
     main()
