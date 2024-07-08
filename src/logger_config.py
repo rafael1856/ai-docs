@@ -64,12 +64,13 @@ def setup_logger(name):
 
     logger = logging.getLogger(name)
    
-    logger.setLevel(logging.LOG_LEVEL)
-    # logger.setLevel(logging.INFO)
+    # Assuming LOG_LEVEL is a string like "DEBUG", "INFO", etc.
+    log_level_attr = getattr(logging, LOG_LEVEL)  # Convert string to logging attribute
+    logger.setLevel(log_level_attr)  # Use the correct logging level
 
     # Create console handler and set level to debug
     ch = logging.StreamHandler()
-    ch.setLevel(logging.LOG_LEVEL)
+    ch.setLevel(log_level_attr)
     # ch.setLevel(logging.INFO)
 
     # Create formatter and add it to the handlers
@@ -82,7 +83,7 @@ def setup_logger(name):
     # If a log file is specified, also add a file handler
     if LOG_FILE:
         fh = logging.FileHandler(LOG_FILE)
-        fh.setLevel(logging.LOG_LEVEL)
+        fh.setLevel(log_level_attr)
         # fh.setLevel(logging.INFO)
         fh.setFormatter(formatter)
         logger.addHandler(fh)

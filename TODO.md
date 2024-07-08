@@ -6,6 +6,7 @@ Project Description
 
 ### Todo
 
+- [ ] Fix bug about saving pictures and results in the same folder
 - [ ] Explanations  
 - [ ] Diagram program  
 - [ ] Recover data from VectorDB  
@@ -24,5 +25,4 @@ Project Description
 
 - [x] Convert from J-Notebook  
 - [x] Normalize, modularize  
-- [x] Add logger, documentation  
-
+- [x] Add logger, documentation

@@ -7,7 +7,7 @@ enviro=$(basename "$PWD")
 mamba create --name $enviro python==3.8.19 -y
 
 # setup install conda in specific environment
-mamba install -n ai-docs --file ../conf/c-requirements.txt -y
+mamba install -n $enviro --file ../conf/c-requirements.txt -y
 
 echo " ------------------------------------   "
 echo " mamba activate "$enviro

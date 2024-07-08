@@ -94,7 +94,16 @@ def main():
         doc_path = args.doc
         print(f"Processing local document: {doc_path}")
     
-        dest_path = os.path.join(DATA_FOLDER, os.path.basename(doc_path))
+        folder_name= os.path.splitext(os.path.basename(doc_path))[0]
+        # print("folder_name:",folder_name)
+        new_folder = os.path.join(DATA_FOLDER,folder_name)
+        # print("new_folder:",new_folder)
+        if not os.path.exists(new_folder):
+            os.makedirs(new_folder)
+            logger.info(f"Created folder: {new_folder}")
+
+        # Copy the document to the new folder
+        dest_path = os.path.join(new_folder, os.path.basename(doc_path))
         if os.path.exists(dest_path):
             logger.info(f"File already exists: {dest_path}")
         else:
