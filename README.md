@@ -42,12 +42,15 @@ It consume CPU and memory for the vector database
 ### How to setup
 
 1. Setup conda (or mamba) enviroment running: bin/setup.sh 
+    ```
         or running 
         mamba create --name your_enviroment_name --file ../conf/c-requirements.txt -y
+    ```
 
 2. Add non conda libraries running: 
+    ```
         pip install -r conf/p-requirements.txt
-
+    ```
 3. Create a config file in folder conf/system_config.json
 ```
 {
@@ -62,13 +65,15 @@ It consume CPU and memory for the vector database
     "log_level": "INFO",
     "list_models": ["llama3", "mistral"]
 }
-```
+
 pip install -U vdms langchain-experimental
 pip install pdf2image "unstructured[all-docs]==0.10.19" pillow pydantic lxml open_clip_torch
 pip uninstall torch torchvision
 pip install torch==1.8.1 torchvision==0.9.1
 pip install tesseract
 sudo apt-get install tesseract-ocr
+```
+
 
 # folder structure
 ```

@@ -2,13 +2,13 @@ import os
 import requests
 
 from unstructured.partition.pdf import partition_pdf
-from read_config import DATA_FOLDER, LOG_FILE
+# from read_config import DATA_FOLDER, LOG_FILE
 
 import logging
 from logger_config import setup_logger
 logger = setup_logger('ai-docs-docs')
 
-def extract_images_texts_from_pdf(pdf_path):
+def extract_images_texts_from_pdf(folder, pdf_path):
     # Extract images, tables, and chunk text
 
     raw_pdf_elements = partition_pdf(
@@ -19,7 +19,7 @@ def extract_images_texts_from_pdf(pdf_path):
         max_characters=4000,
         new_after_n_chars=3800,
         combine_text_under_n_chars=2000,
-        image_output_dir_path=DATA_FOLDER,
+        image_output_dir_path=folder,
     )
 
     return raw_pdf_elements

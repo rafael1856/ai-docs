@@ -26,7 +26,7 @@ from assistent import multi_modal_rag_chain
 
 from read_config import DATA_FOLDER
 
-import logging
+# import logging
 from logger_config import setup_logger
 
 
@@ -52,16 +52,15 @@ def generate_response(retr, query):
 
     return response, imghtml
 
-
-
-def process_doc(doc_name: str):
-        
-    raw_pdf_elements = extract_images_texts_from_pdf(doc_name)
+def process_doc(folder: str, doc_name: str):
+    
+    logger.debug(f"process_doc --- folder: {folder} doc: {doc_name}")
+    raw_pdf_elements = extract_images_texts_from_pdf(folder, doc_name)
     
     texts, tables = categorize_elements(raw_pdf_elements)
     logger.info(f"Found {len(texts)} texts and {len(tables)} tables")
 
-    retr = vectorize(DATA_FOLDER, texts)
+    retr = vectorize(folder, texts)
     
     # TODO loop for questions and answers
     # query = "Woman with children"
@@ -71,14 +70,19 @@ def process_doc(doc_name: str):
 
     # Save the response
     logger.debug(f"Writing response: {respo}")
-    file_text = DATA_FOLDER  + "/response.txt"
+    file_text = folder  + "/response.txt"
     with open(file_text, "w") as file:
         file.write(respo)
 
     logger.info("Response saved successfully.")
     logger.debug(f"Response saved successfully: {respo}")
 
-    # Display the image by rendering the HTML
+    # Save the image as an HTML file
+    file_image = folder + "/image.html"
+    with open(file_image, "w") as file:
+        file.write(imgh)
+
+    #TODO: review? Display the image by rendering the HTML
     # the html was generated at images.py
     display(HTML(imgh))
 
@@ -90,18 +94,19 @@ def main():
 
     args = parser.parse_args()
     print()
-    if args.doc:
-        doc_path = args.doc
-        print(f"Processing local document: {doc_path}")
-    
-        folder_name= os.path.splitext(os.path.basename(doc_path))[0]
-        # print("folder_name:",folder_name)
-        new_folder = os.path.join(DATA_FOLDER,folder_name)
-        # print("new_folder:",new_folder)
-        if not os.path.exists(new_folder):
-            os.makedirs(new_folder)
-            logger.info(f"Created folder: {new_folder}")
 
+    doc_path = args.doc
+    print(f"Processing local document: {doc_path}")
+    # create a folder for processing the document
+    folder_name= os.path.splitext(os.path.basename(doc_path))[0]
+    # print("folder_name:",folder_name)
+    new_folder = os.path.join(DATA_FOLDER,folder_name)
+    # print("new_folder:",new_folder)
+    if not os.path.exists(new_folder):
+        os.makedirs(new_folder)
+        logger.info(f"Created folder: {new_folder}")
+
+    if args.doc:
         # Copy the document to the new folder
         dest_path = os.path.join(new_folder, os.path.basename(doc_path))
         if os.path.exists(dest_path):
@@ -115,16 +120,18 @@ def main():
         logger.info(f"Downloading document from URL: {args.url}")
         doc_name = args.url.split("/")[-1]
         logger.debug("doc_name:",doc_name)
-        doc_path = os.path.join(DATA_FOLDER, doc_name)       
+
+
+        doc_path = os.path.join(new_folder, doc_name)       
         with open(doc_path, "wb") as f:
             f.write(requests.get(args.url).content)
     else:
         print("Please provide either --doc <path_to_the_doc> or --url <url>")
         return
 
-    process_doc(doc_path)
+    process_doc(new_folder, doc_path)
 
-    print(f"\n Results are saved at folder:, {DATA_FOLDER}\n")
+    print(f"\n Results are saved at folder:, {new_folder}\n")
 
 if __name__ == "__main__":
     main()

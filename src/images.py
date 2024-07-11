@@ -5,7 +5,7 @@ import os.path
 import base64
 # import json
 # import time
-from IPython.display import display
+# from IPython.display import display
 # import subprocess
 # import requests
 
@@ -22,7 +22,8 @@ from langchain_community.vectorstores.vdms import VDMS_Client
 # from langchain_core.output_parsers import StrOutputParser
 # from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 
-from read_config import DATA_FOLDER
+
+# from read_config import DATA_FOLDER
 from logger_config import setup_logger
 
 print("Starting AI-Docs...")
@@ -108,6 +109,7 @@ def is_base64(s):
     except Exception:
         return False
 
+
 def split_image_text_types(docs):
     """Split numpy array images and texts"""
     images = []
@@ -136,10 +138,10 @@ def plt_img_base64(img_base64):
     # Create an HTML img tag with the base64 string as the source
     image_html = f'<img src="data:image/jpeg;base64,{img_base64}" />'
 
-    # Save the image as an HTML file
-    file_image = DATA_FOLDER + "/image.html"
-    with open(file_image, "w") as file:
-        file.write(image_html)
+    # # Save the image as an HTML file
+    # file_image = DATA_FOLDER + "/image.html"
+    # with open(file_image, "w") as file:
+    #     file.write(image_html)
 
     return image_html
 
