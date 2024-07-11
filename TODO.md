@@ -15,6 +15,7 @@ Project Description
 - [ ] Save results in a DB  
 - [ ] Add one folder per PDF  
 - [ ] Doc strings  
+- [ ] Re-test setup conda environment
 
 ### In Progress
 
