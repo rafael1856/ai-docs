@@ -6,7 +6,10 @@ Project Description
 
 ### Todo
 
-- [ ] Fix bug about saving pictures and results in the same folder
+- [ ] bug: save each answer and html generated with differnt name
+- [ ] bug: about saving pictures and results in the same folder
+- [ ] bug: check filteype is pdf or text, html ?
+- [ ] Convert other type of docs to PDF
 - [ ] Explanations  
 - [ ] Diagram program  
 - [ ] Recover data from VectorDB  

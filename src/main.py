@@ -60,31 +60,36 @@ def process_doc(folder: str, doc_name: str):
     texts, tables = categorize_elements(raw_pdf_elements)
     logger.info(f"Found {len(texts)} texts and {len(tables)} tables")
 
-    retr = vectorize(folder, texts)
-    
-    # TODO loop for questions and answers
-    # query = "Woman with children"
+    retr = vectorize(folder, texts) 
     query = "viking cat"
 
-    respo, imgh = generate_response(retr, query)
+    # loop for questions and answers
+    while True:
+        respo, imgh = generate_response(retr, query)
+        file_name = query.replace(" ", "-")
 
-    # Save the response
-    logger.debug(f"Writing response: {respo}")
-    file_text = folder  + "/response.txt"
-    with open(file_text, "w") as file:
-        file.write(respo)
+        # Save the response
+        logger.debug(f"Writing response: {respo}")
+        file_text = f"{folder}/{file_name}.txt"
+        with open(file_text, "w") as file:
+            file.write(respo)
 
-    logger.info("Response saved successfully.")
-    logger.debug(f"Response saved successfully: {respo}")
+        logger.info("Response saved successfully.")
+        logger.debug(f"Response saved successfully: {respo}")
 
-    # Save the image as an HTML file
-    file_image = folder + "/image.html"
-    with open(file_image, "w") as file:
-        file.write(imgh)
+        # Save the image as an HTML file
+        file_image = folder + "/image.html"
+        with open(file_image, "w") as file:
+            file.write(imgh)
 
-    #TODO: review? Display the image by rendering the HTML
-    # the html was generated at images.py
-    display(HTML(imgh))
+        #TODO: review? Display the image by rendering the HTML
+        # the html was generated at images.py
+        display(HTML(imgh))
+        
+        query_input = input("Next quetion ? (type 'end' or empty to stop): ")
+        if query_input.lower() in ["end", ""]:
+            break
+        query = query_input  # Update the query variable
 
 def main():
     parser = argparse.ArgumentParser(description='Process a document.')
