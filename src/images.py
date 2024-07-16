@@ -3,26 +3,31 @@
 import os
 import os.path
 import base64
-import json
-import time
-from IPython.display import display
-import subprocess
-import requests
+# import json
+# import time
+# from IPython.display import display
+# import subprocess
+# import requests
 
-from pathlib import Path
+# from pathlib import Path
 from io import BytesIO
 from PIL import Image
 
 from langchain_community.vectorstores import VDMS
 from langchain_experimental.open_clip import OpenCLIPEmbeddings
 from langchain_community.vectorstores.vdms import VDMS_Client
-from unstructured.partition.pdf import partition_pdf
-from langchain_community.llms.ollama import Ollama
-from langchain_core.messages import HumanMessage
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnableLambda, RunnablePassthrough
+# from unstructured.partition.pdf import partition_pdf
+# from langchain_community.llms.ollama import Ollama
+# from langchain_core.messages import HumanMessage
+# from langchain_core.output_parsers import StrOutputParser
+# from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 
-from read_config import DATA_FOLDER, LOG_FILE
+
+# from read_config import DATA_FOLDER
+from logger_config import setup_logger
+
+print("Starting AI-Docs...")
+logger = setup_logger('ai-docs-images')
 
 
 def vectorize(datapath, texts):
@@ -104,6 +109,7 @@ def is_base64(s):
     except Exception:
         return False
 
+
 def split_image_text_types(docs):
     """Split numpy array images and texts"""
     images = []
@@ -122,7 +128,7 @@ def split_image_text_types(docs):
         else:
             text.append(doc)
             
-    # print({"images": images, "texts": text})
+    logger.debug ({"images": images, "texts": text})
     return {"images": images, "texts": text}
 
 
@@ -132,10 +138,10 @@ def plt_img_base64(img_base64):
     # Create an HTML img tag with the base64 string as the source
     image_html = f'<img src="data:image/jpeg;base64,{img_base64}" />'
 
-    # Save the image as an HTML file
-    file_image = DATA_FOLDER + "/image.html"
-    with open(file_image, "w") as file:
-        file.write(image_html)
+    # # Save the image as an HTML file
+    # file_image = DATA_FOLDER + "/image.html"
+    # with open(file_image, "w") as file:
+    #     file.write(image_html)
 
     return image_html
 

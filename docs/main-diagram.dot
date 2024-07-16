@@ -1,0 +1,26 @@
+digraph G {
+    // Nodes
+    node [shape=box];
+
+    main_py [label="main.py\nMain Application Logic"];
+    docs_py [label="docs.py\nDocument Processing"];
+    images_py [label="images.py\nImage Handling"];
+    assistent_py [label="assistent.py\nAssistance Logic"];
+    run_docker_sh [label="run-docker.sh\nDocker Script"];
+
+    // Edges
+    main_py -> docs_py [label="Uses"];
+    main_py -> images_py [label="Uses"];
+    main_py -> assistent_py [label="Uses"];
+    main_py -> run_docker_sh [label="Starts"];
+    docs_py -> images_py [label="Provides Data"];
+    images_py -> assistent_py [label="Provides Images"];
+    assistent_py -> main_py [label="Returns Response"];
+
+    // Styling
+    main_py [style=filled, fillcolor="#CCFFCC"];
+    docs_py [style=filled, fillcolor="#FFFFCC"];
+    images_py [style=filled, fillcolor="#CCFFFF"];
+    assistent_py [style=filled, fillcolor="#CCCCFF"];
+    run_docker_sh [style=filled, fillcolor="#FFCCCC"];
+}
